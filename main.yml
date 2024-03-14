@@ -45,12 +45,6 @@
   tags:
     - pre_tasks
 
-# - name: proxmox configure.
-#   hosts: proxmox
-#   roles:
-#     - role: proxmox
-#   become: true
-
 # - name: rpi configure.
 #   hosts: rpi
 #   roles:
