@@ -1,0 +1,109 @@
+---
+- hosts: all
+  pre_tasks:
+    - name: Update installer cache if needed.
+      package:
+        upgrade: yes
+        update_cache: true
+        cache_valid_time: 86400
+      become: true
+      ignore_errors: true
+
+    - name: Set up ssh keys.
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user_id }}"
+        state: present
+        key: "{{ lookup('file', item) }}"
+      with_fileglob:
+        - "ssh_keys/*.pub"
+
+    - name: install common programs.
+      package:
+        name:
+        - micro
+        - tmux
+        - htop
+        - btop
+        - git
+        - stow
+        - zoxide
+        - fzf
+      become: true
+
+    - name: transfer conf files.
+      ansible.builtin.git:
+        repo: https://github.com/Velasko/dotfiles
+        dest: ~/dotfiles
+
+    - name: activate conf files.
+      ansible.builtin.command: "stow ."
+      args:
+        chdir: ~/dotfiles
+      register: stow
+
+    - debug: var=stow
+  tags:
+    - pre_tasks
+
+# - name: proxmox configure.
+#   hosts: proxmox
+#   roles:
+#     - role: proxmox
+#   become: true
+
+# - name: rpi configure.
+#   hosts: rpi
+#   roles:
+#     - role: rpi
+#   become: true
+
+- name: borg configure.
+  hosts: borg
+  roles:
+    - role: backup
+  vars:
+    ansible_become_password: "{{ lookup('community.general.bitwarden', 'sudoers', field='proxmox')[0] }}"
+
+- name: nyaa_bot configure.
+  hosts: nyaa_bot
+  roles:
+    - role: nyaa_bot
+
+- name: engcomp_bot configure.
+  hosts: engcomp_bot
+  roles:
+    - role: engcomp_bot
+
+- name: kubenode configure.
+  hosts: kubenode
+  roles:
+    - role: kubenode
+  become: true
+
+# --- DMZ SERVERS ---
+
+- name: haproxy configure.
+  hosts: haproxy
+  roles:
+    - role: haproxy
+
+- name: jellyfin configure.
+  hosts: jellyfin
+  roles:
+    - role: jellyfin
+
+- name: vaultwarden configure.
+  hosts: vaultwarden
+  roles:
+    - role: vaultwarden
+
+- name: revolt configure
+  hosts: revolt
+  roles:
+    - role: revolt
+
+# - name: nordvpn configure.
+#   hosts: nordvpn
+#   roles:
+#     - role: nordvpn
+

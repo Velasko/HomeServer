@@ -1,0 +1,59 @@
+---
+- name: install dependencies.
+  package:
+    name:
+      - python3
+      - python3-pip
+      - python3-virtualenv
+      - python3-setuptools
+      - build-essential
+      - libssl-dev
+      - libffi-dev
+      - git
+
+- name: source-code transfer.
+  ansible.builtin.git:
+    repo: git@github.com:Velasko/anime_releases_bot.git
+    dest: "/bin/{{role_path|basename}}"
+    accept_hostkey: true
+  notify: restart bot
+
+- name: transfer service file.
+  ansible.builtin.template:
+    src: templates/service_file.template
+    dest: "/etc/systemd/system/{{role_path|basename}}.service"
+    owner: root
+    # validate: systemd-analyze verify %s
+  notify:
+    - daemon reload
+    - restart bot
+
+- name: transfer application database.
+  copy:
+    src: "database.db"
+    dest: "/bin/{{role_path|basename}}/src"
+    owner: root
+    force: false
+
+- name: updating local database.
+  fetch:
+    src: "/bin/{{role_path|basename}}/src/database.db"
+    dest: "{{role_path}}/files/database.db"
+    flat: true
+
+- name: transfer bot connection.
+  copy:
+    src: "bot.session"
+    dest: "/bin/{{role_path|basename}}/"
+    owner: root
+    force: false
+
+- name: create venv.
+  ansible.builtin.pip:
+    requirements: "/bin/{{role_path|basename}}/requirements.txt"
+    virtualenv: "/bin/{{role_path|basename}}/venv"
+
+- name: enable service.
+  ansible.builtin.service:
+    name: "{{role_path|basename}}"
+    enabled: true

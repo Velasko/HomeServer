@@ -1,0 +1,19 @@
+[Unit]
+Description=Anime Bot service
+StartLimitIntervalSec=0
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=60
+User=root
+WorkingDirectory=/bin/{{role_path|basename}}/src
+ExecStart=/bin/{{role_path|basename}}/venv/bin/python3 ./main.py
+Environment="API_ID={{ lookup('community.general.bitwarden', '{{role_path|basename}}', field='api_id')[0] }}"
+Environment="API_HASH={{ lookup('community.general.bitwarden', '{{role_path|basename}}', field='api_hash')[0] }}"
+Environment="BOT_TOKEN={{ lookup('community.general.bitwarden', '{{role_path|basename}}', field='bot_token')[0] }}"
+Environment="DATABASE_URI={{ lookup('community.general.bitwarden', '{{role_path|basename}}', field='database_uri')[0] }}"
+
+[Install]
+WantedBy=multi-user.target

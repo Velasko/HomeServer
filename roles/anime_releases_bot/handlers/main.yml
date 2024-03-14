@@ -1,0 +1,9 @@
+---
+- name: daemon reload
+  ansible.builtin.service:
+    daemon_reload: true
+
+- name: restart bot
+  ansible.builtin.service:
+    name: "{{role_path|basename}}"
+    state: "restarted"
