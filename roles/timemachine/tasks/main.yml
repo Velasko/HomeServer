@@ -1,0 +1,62 @@
+---
+- name: info fetch.
+  ansible.builtin.set_fact:
+    username: "{{ lookup('community.general.bitwarden', '{{ inventory_hostname }}', field='username')[0] }}"
+    password: "{{ lookup('community.general.bitwarden', '{{ inventory_hostname }}', field='password')[0] }}"
+
+- name: install packages.
+  ansible.builtin.package:
+    name:
+      - avahi-daemon
+      - samba
+    state: present
+
+- name: user creation.
+  ansible.builtin.user:
+    name: "{{ username }}"
+    password: "{{ password }}"
+    create_home: false
+
+- name: set user smb password.
+  ansible.builtin.command:
+    cmd: 'smbpasswd -a -s {{ username }}'
+  args:
+    stdin: "{{ password }}\n{{ password }}"
+  changed_when: false
+
+- name: folder permission settings.
+  ansible.builtin.file:
+    path: /srv/timemachine
+    owner: "{{ username }}"
+    recurse: true
+
+- name: Config system.
+  block:
+  - name: Block guests.
+    ansible.builtin.lineinfile:
+      path: /etc/samba/smb.conf
+      regexp: 'usershare allow guests = '
+      line: usershare allow guests = no
+
+  - name: parse config.
+    ansible.builtin.blockinfile:
+      path: /etc/samba/smb.conf
+      block: |
+        [backups]
+         comment = Backups
+         path = /srv/timemachine
+         valid users = {{ username }}
+         read only = no
+         vfs objects = catia fruit streams_xattr
+         fruit:time machine = yes
+  notify:
+    - restart avahi-daemon
+    - restart samba
+
+- name: enable services.
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+  loop:
+    - avahi-daemon
+    - smbd
