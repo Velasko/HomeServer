@@ -1,0 +1,64 @@
+---
+- name: install python dependencies.
+  package:
+    name:
+      - git
+      - rsync
+      - python3-pip
+      - python3-venv
+      - python3-setuptools
+
+- name: clone bot repo.
+  ansible.builtin.git:
+    repo: https://github.com/Velasko/engenhacao.git
+    dest: /bin/engcomp_bot/repo/
+    version: main
+    single_branch: true
+  notify: restart bot
+
+- name: create media directory.
+  ansible.builtin.file:
+    path: /var/engenhacao/media
+    state: directory
+
+- name: video file transfer.
+  ansible.posix.synchronize:
+    src: media/welcome-to-hell.mp4
+    dest: /var/engenhacao/media/
+    checksum: true
+    times: no
+
+- name: bot dependencies install.
+  pip:
+    requirements: /bin/engcomp_bot/repo/requirements.txt
+    virtualenv: /bin/engcomp_bot/venv
+
+- name: service file transfer.
+  ansible.posix.synchronize:
+    src: engcomp_bot.service
+    dest: /etc/systemd/system/
+    checksum: true
+    times: no
+  notify: reload daemon
+
+- name: create credentials file.
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+  loop:
+    - { path: /var/engenhacao, state: directory }
+    - { path: /var/engenhacao/credentials, state: touch }
+
+- name: set credential variables.
+  lineinfile:
+    path: /var/engenhacao/credentials
+    line: |
+      api_id={{ lookup('community.general.bitwarden', 'engenhacao', field='api_id')[0] }}
+      api_hash={{ lookup('community.general.bitwarden', 'engenhacao', field='api_hash')[0] }}
+      bot_token={{ lookup('community.general.bitwarden', 'engenhacao', field='bot_token')[0] }}
+  notify: restart bot
+
+- name: enable bot.
+  ansible.builtin.service:
+    name: "engcomp_bot"
+    enabled: true

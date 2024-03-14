@@ -1,0 +1,16 @@
+[Unit]
+Description=Engcomp Bot service
+StartLimitIntervalSec=0
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=60
+User=root
+WorkingDirectory=/bin/engcomp_bot/
+ExecStart=/bin/engcomp_bot/venv/bin/python /bin/engcomp_bot/repo/src/main.py
+EnvironmentFile=/var/engenhacao/credentials
+
+[Install]
+WantedBy=multi-user.target

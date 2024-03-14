@@ -1,0 +1,10 @@
+---
+- name: reload daemon
+  ansible.builtin.service:
+    daemon_reload: true
+  notify: restart bot
+
+- name: restart bot
+  ansible.builtin.service:
+    name: "engcomp_bot"
+    state: "restarted"
