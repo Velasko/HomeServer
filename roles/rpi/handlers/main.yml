@@ -1,0 +1,9 @@
+---
+- name: daemon reload
+  ansible.builtin.service:
+    daemon_reload: true
+
+- name: restart wpa_supplicant-wlan0
+  ansible.builtin.service:
+    name: "wpa_supplicant@wlan0"
+    state: "restarted"

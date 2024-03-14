@@ -1,0 +1,45 @@
+---
+- name: install required printer packages.
+  package:
+    name:
+      - usbutils
+      - cups
+      - avahi
+      - nss-mdns
+      - samba
+    state: present
+
+- name: create samba config file.
+  ansible.builtin.get_url:
+    url: "https://git.samba.org/samba.git/?p=samba.git;a=blob_plain;f=examples/smb.conf.default;hb=HEAD"
+    dest: /etc/samba/smb.conf
+    mode: '0600'
+    force: false
+
+- name: start printer services.
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: "started"
+  with_items:
+    - cups.socket
+    - smb
+    - avahi-daemon
+
+- name: configure ns switch.
+  ansible.builtin.lineinfile:
+    path: /etc/nsswitch.conf
+    regexp: '^hosts:'
+    line: "hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns"
+
+# - name: create L355 driver folder.
+#   file:
+#     path: /var/L355/
+#     state: directory
+#     mode: '0600'
+#
+# - name: download L355 drivers.
+#   ansible.builtin.get_url:
+#     url: "https://download.ebz.epson.net/dsc/du/02/DriverDownloadInfo.do?LG2=JA&CN2=US&CTI=178&PRN=Linux%20src%20package&OSC=LX&DL"
+#     dest: /var/L355/
+#     mode: '0600'

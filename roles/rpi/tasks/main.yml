@@ -1,0 +1,68 @@
+# ---
+# # https://gist.github.com/ajouellette/4e28439295506010032f
+# - name: install needed packages.
+#   package:
+#     name:
+#       - base
+#       - base-devel
+#       - archlinuxarm-keyring
+#       - wget
+#       - python-pip
+#       - python-setuptools
+#       - wpa_supplicant
+#       - networkmanager
+#       - dhclient
+#     state: present
+#
+# - name: enable and start wpa_suppicant service.
+#   ansible.builtin.service:
+#     name: "{{ item }}"
+#     enabled: true
+#     state: "started"
+#   with_items:
+#     - wpa_supplicant
+#     - wpa_supplicant@wlan0
+#
+# # - name: enable and start wpa_suppicant service.
+# #   ansible.builtin.service:
+# #     name: "NetworkManager"
+# #     enabled: true
+# #     state: "started"
+#
+# - name: Set hostname.
+#   ansible.builtin.hostname:
+#     name: rpi-arch
+#
+# - name: get wifi info.
+#   set_fact:
+#     # ssid: "{{ lookup('community.general.bitwarden', 'Home Wi-Fi', field='username')[0] }}"
+#     # passwd: "{{ lookup('community.general.bitwarden', 'Home Wi-Fi', field='password')[0] }}"
+#     ssid: Velascos
+#     passwd: ilov3myhom3
+#
+# # https://www.linuxbabe.com/command-line/ubuntu-server-16-04-wifi-wpa-supplicant
+# # https://unix.stackexchange.com/questions/173781/how-can-i-enable-wpa-supplicant-on-boot
+# - name: configure wifi network.
+#   block:
+#
+#     - name: Generate wpa file contents.
+#       ansible.builtin.command: "wpa_passphrase {{ ssid }} {{ passwd }}"
+#       register: wpa
+#       changed_when: false
+#
+#     - name: Add auto dhcp to wpa configuration.
+#       ansible.builtin.blockinfile:
+#         path: /usr/lib/systemd/system/wpa_supplicant@.service
+#         insertafter: "ExecStart=/usr/bin/wpa_supplicant -c/etc/wpa_supplicant/wpa_supplicant-%I.conf -i%I"
+#         marker: "### {mark} ANSIBLE MANAGED BLOCK ###"
+#         block: ExecStartPost=/usr/bin/dhclient %I
+#       notify: daemon reload
+#
+#     - name: Write wpa configuration.
+#       ansible.builtin.copy:
+#         content: "{{ wpa.stdout }}"
+#         dest: "/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
+#       notify: restart wpa_supplicant-wlan0
+#
+- name: configure printer.
+  include_tasks: printer.yml
