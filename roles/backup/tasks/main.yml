@@ -1,0 +1,19 @@
+---
+- name: install dependencies.
+  package:
+    name:
+      - python3
+      - python3-pip
+      - python3-setuptools
+      - python3-venv
+      - rsync
+      - borgbackup
+
+# - name: borg repository initialization.
+  # ansible.builtin.command:
+    # cmd: borg init --encryption=repokey /var/borg/velasco
+  # args:
+    # creates: /var/borg/velasco/README
+  # environment:
+    # BORG_PASSPHRASE: "{{ lookup('community.general.bitwarden', 'Borg', field='password')[0] }}"
+
