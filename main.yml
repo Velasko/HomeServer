@@ -64,10 +64,10 @@
   vars:
     ansible_become_password: "{{ lookup('community.general.bitwarden', 'sudoers', field='proxmox')[0] }}"
 
-- name: nyaa_bot configure.
-  hosts: nyaa_bot
+- name: anime_bot configure.
+  hosts: anime_bot
   roles:
-    - role: nyaa_bot
+    - role: anime_releases_bot
 
 - name: engcomp_bot configure.
   hosts: engcomp_bot
@@ -96,11 +96,6 @@
   hosts: vaultwarden
   roles:
     - role: vaultwarden
-
-- name: revolt configure
-  hosts: revolt
-  roles:
-    - role: revolt
 
 # - name: nordvpn configure.
 #   hosts: nordvpn

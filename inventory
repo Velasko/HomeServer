@@ -10,8 +10,8 @@ ubuntu-server.vm
 [rpi]
 rpi.home
 
-[nyaa_bot]
-nyaa-bot.vm
+[anime_bot]
+anime-bot.vm
 
 [engcomp_bot]
 engcomp-bot.vm
@@ -56,5 +56,5 @@ ansible_user=ansible
 [all:vars]
 ansible_user=root
 ansible_ssh_private_key_file=~/.ssh/id_ed25519
-# ansible_ssh_common_args="-o StrictHostKeyChecking=no"
+ansible_ssh_common_args="-o StrictHostKeyChecking=accept-new"
 ansible_python_interpreter=/usr/bin/python3
