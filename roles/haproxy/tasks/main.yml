@@ -1,0 +1,11 @@
+---
+- include_vars: parameters.yml
+
+- name: configure http certificate updater.
+  include_tasks: certbot.yml
+
+- name: configure haproxy
+  include_tasks: haproxy.yml
+
+- name: configure autossh
+  include_tasks: autossh.yml

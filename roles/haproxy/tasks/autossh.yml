@@ -1,0 +1,11 @@
+- name: install service.
+  package:
+    name:
+      - autossh
+
+- name: add autossh to cron.
+  ansible.builtin.cron:
+    name: autossh to expose to internet
+    special_time: "reboot"
+    job: "autossh -M 0 -o \"ServerAliveInterval 30\" -o \"ServerAliveCountMax 3\" -N -f -R *:80:haproxy.vm:80 -R *:443:haproxy.vm:443 root@204.216.165.117"
+    state: present

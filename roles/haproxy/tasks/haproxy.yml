@@ -1,0 +1,43 @@
+---
+- name: install service.
+  package:
+    name:
+      - haproxy
+
+#https://serverfault.com/questions/738363/haproxy-selecting-backend-dynamically-from-subdomain
+
+- name: add domain sink.
+  ansible.builtin.blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: "## {mark} ANSIBLE MANAGED BLOCK: sink ##"
+    block: |
+      backend sink
+          http-request reject
+    validate: haproxy -c -V -f %s
+  notify: restart haproxy
+
+- name: generate fontend loadbalancing.
+  set_fact:
+    backend: |
+      {{ backend | default('') }}
+          acl {{ item.region_name }}_allowed_ipv4 src {{ item.subnet }}
+          acl {{ item.region_name }}_valid_base_domain hdr_end(host) -i {{ item.domain }}
+          use_backend {{ item.region_name }}:%[req.hdr(host),lower,field(1,'.')] if {{ item.region_name }}_valid_base_domain {{ item.region_name }}_allowed_ipv4
+  loop: "{{ domains }}"
+
+- name: add acceptable domains.
+  ansible.builtin.blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: "## {mark} ANSIBLE MANAGED BLOCK: Frontend ##"
+    block: |
+      frontend http_in
+          maxconn 10000
+          bind *:80
+          bind *:443 ssl crt /etc/letsencrypt/live/velasco.ovh/fullchain.pem alpn h2,http/1.1
+          mode http
+          redirect scheme https if !{ ssl_fc }
+          {{ backend }}
+
+          default_backend sink
+    validate: haproxy -c -V -f %s
+  notify: restart haproxy

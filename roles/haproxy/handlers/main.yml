@@ -1,0 +1,15 @@
+---
+- name: restart haproxy
+  ansible.builtin.service:
+    name: "haproxy"
+    state: "restarted"
+
+- name: restart remote haproxy
+  ansible.builtin.service:
+    name: "haproxy"
+    state: "restarted"
+  delegate_to: "{{ haproxy_host }}"
+  loop: "{{ groups['haproxy'] }}"
+  loop_control:
+    loop_var: haproxy_host
+

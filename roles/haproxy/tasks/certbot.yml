@@ -1,0 +1,57 @@
+---
+- name: Install environment.
+  package:
+    name:
+      - python3
+      - python3-venv
+      - python3-setuptools
+      - libaugeas0
+      - python3-certbot-dns-cloudflare
+    state: present
+
+- name: Install certbot.
+  ansible.builtin.pip:
+    name:
+      - certbot
+      - cloudflare
+    virtualenv: /opt/certbot/
+    state: latest
+
+- name: Create certbot symlink.
+  ansible.builtin.file:
+    src: /opt/certbot/bin/certbot
+    dest: /usr/bin/certbot
+    state: link
+
+- name: Install dns plugin.
+  ansible.builtin.pip:
+    name:
+      - certbot-dns-cloudflare
+    virtualenv: /opt/certbot/
+    state: present
+
+- name: Get cloudflare key.
+  ansible.builtin.set_fact:
+    cloudflare_username: "{{ lookup('community.general.bitwarden', 'Haproxy Cloudflare Token', field='username')[0] }}"
+    cloudflare_key: "{{ lookup('community.general.bitwarden', 'Haproxy Cloudflare Token', field='password')[0] }}"
+
+- name: Template cloudflare file.
+  ansible.builtin.template:
+    src: cloudflare.template
+    dest: /root/.secrets/certbot/cloudflare.ini
+    mode: 0600
+
+# certbot certonly --dns-cloudflare --dns-cloudflare-credentials ~/.secrets/certbot/cloudflare.ini -d *.velasco.ovh -v
+
+- name: Set keyfile symlink.
+  ansible.builtin.file:
+    src: /etc/letsencrypt/live/velasco.ovh/privkey.pem
+    dest: /etc/letsencrypt/live/velasco.ovh/fullchain.pem.key
+    state: link
+
+- name: Ensure a job that runs at 2 and 5 exists. Creates an entry like "0 5,2 * * ls -alh > /dev/null"
+  ansible.builtin.cron:
+    name: "check dirs"
+    minute: "0"
+    hour: "0,12"
+    job: "/opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && ertbot renew -q\" | sudo tee -a /etc/crontab > /dev/null"
