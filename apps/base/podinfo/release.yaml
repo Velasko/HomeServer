@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: podinfo
-  namespace: cluster-config
+  namespace: podinfo
 spec:
   releaseName: podinfo
   chart:
@@ -11,7 +11,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: podinfo
-        namespace: cluster-config
+        namespace: podinfo
   interval: 5m
   install: 5m
   values:
