@@ -11,3 +11,4 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: rook-ceph
+  interval: 50m
