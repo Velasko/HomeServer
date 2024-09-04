@@ -1,7 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: podinfo
+namespace: rook-ceph
 resources:
   - namespace.yaml
   - repository.yaml
   - release.yaml
+# Rook docs:
+# https://rook.io/docs/rook/latest-release/Getting-Started/quickstart/#deploy-the-rook-operator
+
+# Helm Chart ref:
+# - https://github.com/rook/rook/blob/04eecf7ab14c672677ebfac02eba9619dc573f55/Documentation/Helm-Charts/operator-chart.md
+

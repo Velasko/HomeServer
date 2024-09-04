@@ -19,13 +19,13 @@ metadata:
   name: rook-ceph-cluster
   namespace: rook-ceph
 spec:
-  dependsOn:
-    - name: rook-ceph
+  # dependsOn:
+  #   - name: rook-ceph
   releaseName: rook-ceph-cluster
-  valuesFrom:
-    - kind: ConfigMap
-      name: operatorNamespace
-      valuesKey: rook-ceph
+  # valuesFrom:
+  #   - kind: ConfigMap
+  #     name: operatorNamespace
+  #     valuesKey: rook-ceph
   chart:
     spec:
       chart: rook-ceph
