@@ -1,3 +1,36 @@
+# Homelab Kubernetes
+
+This repo shall be my new configuration for my home server.
+It has [Talos Linux](https://www.talos.dev/) running bare metal and will be running [FluxCD](https://fluxcd.io/) to manage deploys.
+The repo is a fork from this [flux2-kustomize-helm](https://github.com/fluxcd/flux2-kustomize-helm-example) tutorial, which its original readme is below the Talos section.
+
+# Talos configuration
+
+Pretty much itr [getting started](https://www.talos.dev/v1.7/introduction/getting-started/), but with a couple of observations.
+
+When [Modifying the Machine configs](https://www.talos.dev/v1.7/introduction/getting-started/#modifying-the-machine-configs), change from /dev/sda to /dev/vda on both controlplane.yaml and worker.yaml.
+
+Also, [enable workers on your control plane nodes](https://www.talos.dev/v1.7/talos-guides/howto/workers-on-controlplane/). Just set allowSchedulingOnControlPlanes to true.
+
+When bootstraping, the configuration might not be named as expected. Use `kubectl config view` to check if doesn't have "admin@" prefixed.
+
+### The commands executed for the staging clusters are the following
+
+``` bash
+    talosctl gen config staging https://192.168.122.107:6443
+    # edit configuration files
+    talosctl apply-config --insecure -n 192.168.122.107 --file controlplane.yaml --talosconfig=./talosconfig
+    talosctl bootstrap --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
+    talosctl kubeconfig --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
+
+    kubectl config rename-context admin@staging staging
+```
+
+## Managing Storage
+
+## Adding a new machine to cluster
+
+
 # flux2-kustomize-helm-example
 
 [![test](https://github.com/fluxcd/flux2-kustomize-helm-example/workflows/test/badge.svg)](https://github.com/fluxcd/flux2-kustomize-helm-example/actions)
@@ -279,6 +312,9 @@ export GITHUB_TOKEN=<your-token>
 export GITHUB_USER=<your-username>
 export GITHUB_REPO=<repository-name>
 ```
+
+The Token can be configured at Settings > Developer settings > Personal access tokens > Fine-grained tokens.
+There, you may select only the desired repo and grant every permission under it.
 
 Verify that your staging cluster satisfies the prerequisites with:
 
