@@ -21,7 +21,7 @@ metadata:
 spec:
   dependsOn:
     - name: rook-ceph
-  releaseName: rook-ceph
+  releaseName: rook-ceph-cluster
   valuesFrom:
     - kind: ConfigMap
       name: operatorNamespace
