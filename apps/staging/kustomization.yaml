@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: podinfo
 resources:
   - ../base/podinfo
+  - ../base/rook-ceph
 patches:
   - path: podinfo-values.yaml
     target:
