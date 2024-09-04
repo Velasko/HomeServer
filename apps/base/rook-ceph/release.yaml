@@ -12,3 +12,24 @@ spec:
         kind: HelmRepository
         name: rook-ceph
   interval: 50m
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: rook-ceph-cluster
+  namespace: rook-ceph
+spec:
+  dependsOn:
+    - name: rook-ceph
+  releaseName: rook-ceph
+  valuesFrom:
+    - kind: ConfigMap
+      name: operatorNamespace
+      valuesKey: rook-ceph
+  chart:
+    spec:
+      chart: rook-ceph
+      sourceRef:
+        kind: HelmRepository
+        name: rook-ceph
+  interval: 50m
