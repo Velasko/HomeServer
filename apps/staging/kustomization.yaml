@@ -1,3 +1,4 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: podinfo
@@ -5,5 +6,15 @@ resources:
   - ../base/podinfo
 patches:
   - path: podinfo-values.yaml
+    target:
+      kind: HelmRelease
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jellyfin
+resources:
+  - ../base/jellyfin
+patches:
+  - path: jellyfin-values.yaml
     target:
       kind: HelmRelease
