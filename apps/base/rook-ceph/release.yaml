@@ -31,5 +31,5 @@ spec:
       chart: rook-ceph
       sourceRef:
         kind: HelmRepository
-        name: rook-ceph
+        name: rook-ceph-cluster
   interval: 50m
