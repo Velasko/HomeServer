@@ -3,6 +3,5 @@ kind: Kustomization
 metadata:
   name: staging-apps
   namespace: flux-system
-spec:
-  path:
-    - ./podinfo
+resources:
+  - ./podinfo
