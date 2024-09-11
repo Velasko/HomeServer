@@ -5,4 +5,4 @@ metadata:
   namespace: flux-system
 resources:
   - ./podinfo
-  - ../base/storage
+  # - ../base/storage
