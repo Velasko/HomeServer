@@ -1,0 +1,18 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn-system
+  namespace: longhorn-system
+spec:
+  chart:
+    spec:
+      version: ">=1.0.0-alpha"
+  test:
+    enable: false
+  values:
+    ingress:
+      hosts:
+        - host: longhorn-system.staging
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
