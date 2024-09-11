@@ -6,13 +6,6 @@ metadata:
 spec:
   chart:
     spec:
-      version: ">=1.0.0-alpha"
+      version: ">=1.0.0"
   test:
     enable: false
-  values:
-    ingress:
-      hosts:
-        - host: longhorn-system.staging
-          paths:
-            - path: /
-              pathType: ImplementationSpecific
