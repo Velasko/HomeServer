@@ -38,7 +38,7 @@ export TALOSCONFIG=$TALOS_CONFIG_PATH/talosconfig
 talosctl gen secrets -o $TALOS_SECRETS
 
 # Generating patched configuration files
-talosctl gen config --with-secrets $TALOS_SECRETS --config-patch @$FLUX_ROOT/clusters/patch.yaml $CLUSTER_NAME $HTTPS_CLUSTER_ENDPOINT
+talosctl gen config --with-secrets $TALOS_SECRETS --config-patch @$FLUX_ROOT/clusters/talos-config.patch $CLUSTER_NAME $HTTPS_CLUSTER_ENDPOINT
 
 # Applying configuration. The --insecure flag only has to be used on the first time. There seems to be a OAuth configuration on this. Also a good idea to check the production clusters information before using that.
 talosctl apply-config --insecure -n $CLUSTER_ENDPOINT --file $TALOS_CONFIG_PATH/controlplane.yaml
