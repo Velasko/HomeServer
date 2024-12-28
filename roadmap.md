@@ -7,7 +7,8 @@ Storage:
         - Automatically download on reinstall
     - Longhorn + zfs ?
         zfs within host + longhorn for container access n' network
-    - Ensure no data is erased on reconfiguration
+        Answer: Better to keep it all on longhorn. Issues may arise as ZFS doesn't support some operations
+    - Ensure no data is erased on reconfiguration or is restored from the cloud bkp
 
 Networking:
     VPN: Netmaker (Wireguard)
