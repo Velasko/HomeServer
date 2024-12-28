@@ -6,12 +6,14 @@ The repo is a fork from this [flux2-kustomize-helm](https://github.com/fluxcd/fl
 
 # Talos configuration
 
-Pretty much itr [getting started](https://www.talos.dev/v1.7/introduction/getting-started/), but with a couple of observations.
+Pretty much itr [getting started](https://www.talos.dev/latest/introduction/getting-started/), but with a couple of observations.
 
-When [Modifying the Machine configs](https://www.talos.dev/v1.7/introduction/getting-started/#modifying-the-machine-configs), change from /dev/sda to /dev/vda on both controlplane.yaml and worker.yaml.
+Depending what is tu be deployed (such as longhorn), [System Extensions](https://www.talos.dev/latest/talos-guides/configuration/system-extensions/) might be required. Reading the [Boot Assets](https://www.talos.dev/latest/talos-guides/install/boot-assets/) is also a good call. However, the [Image Factory](https://factory.talos.dev/) is the simplest way to get by.
 
-Also, [enable workers on your control plane nodes](https://www.talos.dev/v1.7/talos-guides/howto/workers-on-controlplane/). Just set allowSchedulingOnControlPlanes to true.
 
+When [Modifying the Machine configs](https://www.talos.dev/latest/introduction/getting-started/#modifying-the-machine-configs), change from /dev/sda to /dev/vda on both controlplane.yaml and worker.yaml. For longhorn support, some extra operations must be done. Those can be found [here](https://longhorn.io/docs/latest/advanced-resources/os-distro-specific/talos-linux-support/). On [Pod Security](https://longhorn.io/docs/latest/advanced-resources/os-distro-specific/talos-linux-support/#pod-security), it says to change to "privileged". However, adding "longhorn-system" to the exemptions also works.
+
+Also, [enable workers on your control plane nodes](https://www.talos.dev/latest/talos-guides/howto/workers-on-controlplane/). Just set allowSchedulingOnControlPlanes to true.
 
 ### The commands executed for the staging clusters are the following
 
