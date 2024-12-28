@@ -12,18 +12,21 @@ When [Modifying the Machine configs](https://www.talos.dev/v1.7/introduction/get
 
 Also, [enable workers on your control plane nodes](https://www.talos.dev/v1.7/talos-guides/howto/workers-on-controlplane/). Just set allowSchedulingOnControlPlanes to true.
 
-When bootstraping, the configuration might not be named as expected. Use `kubectl config view` to check if doesn't have "admin@" prefixed.
 
 ### The commands executed for the staging clusters are the following
 
 ``` bash
-    talosctl gen config staging https://192.168.122.107:6443
-    # edit configuration files
-    talosctl apply-config --insecure -n 192.168.122.107 --file controlplane.yaml --talosconfig=./talosconfig
-    talosctl bootstrap --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
-    talosctl kubeconfig --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
+talosctl gen config staging https://192.168.122.107:6443
+# edit configuration files
+talosctl apply-config --insecure -n 192.168.122.107 --file controlplane.yaml --talosconfig=./talosconfig
+talosctl bootstrap --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
+talosctl kubeconfig --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
+```
 
-    kubectl config rename-context admin@staging staging
+When bootstraping, the configuration might not be named as expected. Use `kubectl config view` to check if doesn't have "admin@" prefixed. Run the following to change:
+
+``` bash
+kubectl config rename-context admin@staging staging
 ```
 
 ## Managing Storage
@@ -337,23 +340,34 @@ flux bootstrap github \
 The bootstrap command commits the manifests for the Flux components in `clusters/staging/flux-system` dir
 and creates a deploy key with read-only access on GitHub, so it can pull changes inside the cluster.
 
-Watch for the Helm releases being installed on staging:
+To watch for the Helm releases being installed on staging, run:
 
 ```console
-$ watch flux get helmreleases --all-namespaces
+watch flux get helmreleases --all-namespaces
+```
 
+Something of this sort should be displayed:
+
+```console
 NAMESPACE    	NAME         	REVISION	SUSPENDED	READY	MESSAGE 
 cert-manager 	cert-manager 	v1.11.0 	False    	True 	Release reconciliation succeeded
 ingress-nginx	ingress-nginx	4.4.2   	False    	True 	Release reconciliation succeeded
 podinfo      	podinfo      	6.3.0   	False    	True 	Release reconciliation succeeded
 ```
 
-Verify that the demo app can be accessed via ingress:
+Verify that the demo app can be accessed via ingress. Those commands are to forward packages from the host to the ingress-nginx-controller (on the ingress-nginx namespace) on the cluster.
 
 ```console
-$ kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8080:80 &
+kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8080:80 &
+```
 
+Running a test command to ensure everything is running as expected.
+
+```console
 $ curl -H "Host: podinfo.staging" http://localhost:8080
+```
+
+```console
 {
   "hostname": "podinfo-59489db7b5-lmwpn",
   "version": "6.2.3"
