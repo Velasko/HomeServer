@@ -6,24 +6,48 @@ The repo is a fork from this [flux2-kustomize-helm](https://github.com/fluxcd/fl
 
 # Talos configuration
 
-Pretty much itr [getting started](https://www.talos.dev/latest/introduction/getting-started/), but with a couple of observations.
+Pretty much it's [getting started](https://www.talos.dev/latest/introduction/getting-started/), but with a couple of observations.
 
-Depending what is tu be deployed (such as longhorn), [System Extensions](https://www.talos.dev/latest/talos-guides/configuration/system-extensions/) might be required. Reading the [Boot Assets](https://www.talos.dev/latest/talos-guides/install/boot-assets/) is also a good call. However, the [Image Factory](https://factory.talos.dev/) is the simplest way to get by.
+Depending what is tu be deployed (such as longhorn), [System Extensions](https://www.talos.dev/latest/talos-guides/configuration/system-extensions/) might be required. Reading the [Boot Assets](https://www.talos.dev/latest/talos-guides/install/boot-assets/) is also a good call. However, the [Image Factory](https://factory.talos.dev/) is the simplest way to get by. Some good reading on [Production Clusters](https://www.talos.dev/latest/introduction/prodnotes/#configure-talos) and [Performance Tuning](https://www.talos.dev/latest/talos-guides/configuration/performance-tuning/) might be useful when deploying for production.
 
-
+-------------# Those modifications are now handled by the patch, but will be kept here as reference #-------------
 When [Modifying the Machine configs](https://www.talos.dev/latest/introduction/getting-started/#modifying-the-machine-configs), change from /dev/sda to /dev/vda on both controlplane.yaml and worker.yaml. For longhorn support, some extra operations must be done. Those can be found [here](https://longhorn.io/docs/latest/advanced-resources/os-distro-specific/talos-linux-support/). On [Pod Security](https://longhorn.io/docs/latest/advanced-resources/os-distro-specific/talos-linux-support/#pod-security), it says to change to "privileged". However, adding "longhorn-system" to the exemptions also works.
 
 Also, [enable workers on your control plane nodes](https://www.talos.dev/latest/talos-guides/howto/workers-on-controlplane/). Just set allowSchedulingOnControlPlanes to true.
+-------------# End of patch modifications #-------------
+
+### The following variables will be used
+``` bash
+export FLUX_ROOT=$(git rev-parse --show-toplevel)
+
+export CLUSTER_NAME="staging"
+export CLUSTER_ENDPOINTS=("list" "of" "endpoints" "addresses")
+export CLUSTER_NODES=("list" "of" "cluster" "node" "addresses")
+export CLUSTER_ENDPOINT=${CLUSTER_ENDPOINTS[@]:0:1}
+export HTTPS_CLUSTER_ENDPOINT=https://$CLUSTER_ENDPOINT:6443
+
+export TALOS_CONFIG_PATH="${FLUX_ROOT}/clusters/${CLUSTER_NAME}/talos"
+export TALOS_SECRETS="$TALOS_CONFIG_PATH/secrets.yaml"
+export TALOSCONFIG=$TALOS_CONFIG_PATH/talosconfig
+```
 
 ### The commands executed for the staging clusters are the following
 
 ``` bash
-talosctl gen config staging https://192.168.122.107:6443
-# edit configuration files
-talosctl apply-config --insecure -n 192.168.122.107 --file controlplane.yaml --talosconfig=./talosconfig
-talosctl bootstrap --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
-talosctl kubeconfig --nodes 192.168.122.107 --endpoints 192.168.122.107 --talosconfig=./talosconfig
+# Generating talos cluster's secrets
+talosctl gen secrets -o $TALOS_SECRETS
+
+# Generating patched configuration files
+talosctl gen config --with-secrets $TALOS_SECRETS --config-patch @$FLUX_ROOT/clusters/patch.yaml $CLUSTER_NAME $HTTPS_CLUSTER_ENDPOINT
+
+# Applying configuration. The --insecure flag only has to be used on the first time. There seems to be a OAuth configuration on this. Also a good idea to check the production clusters information before using that.
+talosctl apply-config --insecure -n $CLUSTER_ENDPOINT --file $TALOS_CONFIG_PATH/controlplane.yaml
+
+# Bootstraping kubernetes
+talosctl bootstrap --nodes $CLUSTER_NODES --endpoints $CLUSTER_ENDPOINT
+talosctl kubeconfig --nodes $CLUSTER_NODES --endpoints $CLUSTER_ENDPOINT
 ```
+P.S. those commands might not work because the list might have to be comma separated, while space is being used.
 
 When bootstraping, the configuration might not be named as expected. Use `kubectl config view` to check if doesn't have "admin@" prefixed. Run the following to change:
 

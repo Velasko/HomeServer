@@ -1,0 +1,14 @@
+machine:
+  install:
+    disk: /dev/vda # The disk used for installations on qemu.
+    image: factory.talos.dev/installer/efb7577422715f84c716c3d30fee60858fb093841d1d539ca5db92ae99737bf8:v1.9.1
+cluster:
+  apiServer:
+    admissionControl:
+      - name: PodSecurity # Name is the name of the admission controller.
+        # Configuration is an embedded configuration object to be used as the plugin's
+        configuration:
+          exemptions:
+            namespaces:
+              - longhorn-system
+  allowSchedulingOnControlPlanes: true
