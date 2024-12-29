@@ -19,8 +19,7 @@ metadata:
   name: jellyfin-pvc-data
   namespace: jellyfin
 spec:
-  storageClassName: ""
-  volumeName: jellyfin-pv-nfs-data
+  storageClassName: ephemeral-longhorn
   accessModes:
     - ReadWriteMany
   volumeMode: Filesystem
