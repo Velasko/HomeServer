@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   labels:
     app: jellyfin
-  name: jellyfin
+  name: jellyfin-svc
   namespace: jellyfin
 spec:
   progressDeadlineSeconds: 300
@@ -23,10 +23,10 @@ spec:
         app: jellyfin
     spec:
       volumes:
-        - name: nfs-jellyfin-config
+        - name: jellyfin-config
           persistentVolumeClaim:
             claimName: jellyfin-pvc-config
-        - name: nfs-jellyfin-data
+        - name: jellyfin-data
           persistentVolumeClaim:
             claimName: jellyfin-pvc-data
       # The settings below have been marked out and can be used when removing the "#"
@@ -48,7 +48,7 @@ spec:
       containers:
         - env:
             - name: JELLYFIN_PublishedServerUrl
-              value: 192.168.122.107 # The IP number for your jellyfin server (see service config)
+              value: jellyfin.velasco.ovh # The IP number for your jellyfin server (see service config)
             - name: PGID
               value: "\x36\x35\x35\x34\x31" # < ASCII code for '65541'
             - name: PUID
@@ -76,9 +76,9 @@ spec:
           tty: true
           volumeMounts:
             - mountPath: /config
-              name: nfs-jellyfin-config
+              name: jellyfin-config
             - mountPath: /data
-              name: nfs-jellyfin-data
+              name: jellyfin-data
           # Below are the path to mount devices for hardware acceleration
           # The settings below have been marked out and can be used when removing the "#"
           # - mountPath: /dev/vcsm
