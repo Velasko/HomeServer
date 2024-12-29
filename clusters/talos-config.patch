@@ -11,4 +11,5 @@ cluster:
           exemptions:
             namespaces:
               - longhorn-system
+              - jellyfin
   allowSchedulingOnControlPlanes: true
