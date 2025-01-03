@@ -7,6 +7,7 @@ metadata:
 resources:
   - namespace.yaml
   - volume.yaml
-  - jellyfin-svc.yaml
+  - jellyfin-dpl.yaml
+  # - jellyfin-svc.yaml
   # - repository.yaml
   # - release.yaml
