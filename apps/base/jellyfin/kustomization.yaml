@@ -8,6 +8,6 @@ resources:
   - namespace.yaml
   - volume.yaml
   - jellyfin-dpl.yaml
-  # - jellyfin-svc.yaml
+  - jellyfin-svc.yaml
   # - repository.yaml
   # - release.yaml

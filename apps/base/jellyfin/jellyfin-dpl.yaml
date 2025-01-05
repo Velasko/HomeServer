@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   labels:
     app: jellyfin
-  name: jellyfin-deploy
+  name: jellyfin
   namespace: jellyfin
 spec:
   progressDeadlineSeconds: 300
