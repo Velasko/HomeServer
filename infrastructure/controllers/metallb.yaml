@@ -6,483 +6,433 @@ metadata:
   labels:
     app: metallb
 ---
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
 metadata:
-  labels:
-    app: metallb
-  name: controller
+  name: metallb
+  namespace: flux-system
 spec:
-  allowPrivilegeEscalation: false
-  allowedCapabilities: []
-  allowedHostPaths: []
-  defaultAddCapabilities: []
-  defaultAllowPrivilegeEscalation: false
-  fsGroup:
-    ranges:
-      - max: 65535
-        min: 1
-    rule: MustRunAs
-  hostIPC: false
-  hostNetwork: false
-  hostPID: false
-  privileged: false
-  readOnlyRootFilesystem: true
-  requiredDropCapabilities:
-    - ALL
-  runAsUser:
-    ranges:
-      - max: 65535
-        min: 1
-    rule: MustRunAs
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    ranges:
-      - max: 65535
-        min: 1
-    rule: MustRunAs
-  volumes:
-    - configMap
-    - secret
-    - emptyDir
+  interval: 15m
+  url: https://metallb.github.io/metallb
 ---
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
 metadata:
-  labels:
-    app: metallb
-  name: speaker
+  name: metallb--metallb-system
+  namespace: flux-system
 spec:
-  allowPrivilegeEscalation: false
-  allowedCapabilities:
-    - NET_RAW
-  allowedHostPaths: []
-  defaultAddCapabilities: []
-  defaultAllowPrivilegeEscalation: false
-  fsGroup:
-    rule: RunAsAny
-  hostIPC: false
-  hostNetwork: true
-  hostPID: false
-  hostPorts:
-    - max: 7472
-      min: 7472
-    - max: 7946
-      min: 7946
-  privileged: true
-  readOnlyRootFilesystem: true
-  requiredDropCapabilities:
-    - ALL
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  volumes:
-    - configMap
-    - secret
-    - emptyDir
+  interval: 15m
+  path: ./metallb-system
+  prune: true # remove any elements later removed from the above path
+  timeout: 2m # if not set, this defaults to interval duration, which is 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: metallb-controller
+      namespace: metallb-system
 ---
 apiVersion: v1
-kind: ServiceAccount
+kind: ConfigMap
 metadata:
-  labels:
-    app: metallb
-  name: controller
+  name: metallb-helm-chart-value-overrides
   namespace: metallb-system
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: metallb
-  name: speaker
-  namespace: metallb-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app: metallb
-  name: metallb-system:controller
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - services/status
-    verbs:
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-  - apiGroups:
-      - policy
-    resourceNames:
-      - controller
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app: metallb
-  name: metallb-system:speaker
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - services
-      - endpoints
-      - nodes
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups: ["discovery.k8s.io"]
-    resources:
-      - endpointslices
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-  - apiGroups:
-      - policy
-    resourceNames:
-      - speaker
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  labels:
-    app: metallb
-  name: config-watcher
-  namespace: metallb-system
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  labels:
-    app: metallb
-  name: pod-lister
-  namespace: metallb-system
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - list
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  labels:
-    app: metallb
-  name: controller
-  namespace: metallb-system
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - create
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    resourceNames:
-      - memberlist
-    verbs:
-      - list
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-    resourceNames:
-      - controller
-    verbs:
-      - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app: metallb
-  name: metallb-system:controller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: metallb-system:controller
-subjects:
-  - kind: ServiceAccount
-    name: controller
-    namespace: metallb-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app: metallb
-  name: metallb-system:speaker
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: metallb-system:speaker
-subjects:
-  - kind: ServiceAccount
-    name: speaker
-    namespace: metallb-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: metallb
-  name: config-watcher
-  namespace: metallb-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: config-watcher
-subjects:
-  - kind: ServiceAccount
-    name: controller
-  - kind: ServiceAccount
-    name: speaker
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: metallb
-  name: pod-lister
-  namespace: metallb-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: pod-lister
-subjects:
-  - kind: ServiceAccount
-    name: speaker
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: metallb
-  name: controller
-  namespace: metallb-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: controller
-subjects:
-  - kind: ServiceAccount
-    name: controller
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    app: metallb
-    component: speaker
-  name: speaker
-  namespace: metallb-system
-spec:
-  selector:
-    matchLabels:
-      app: metallb
-      component: speaker
-  template:
-    metadata:
-      annotations:
-        prometheus.io/port: "7472"
-        prometheus.io/scrape: "true"
-      labels:
-        app: metallb
-        component: speaker
-    spec:
-      containers:
-        - args:
-            - --port=7472
-            - --config=config
-            - --log-level=info
-          env:
-            - name: METALLB_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-            - name: METALLB_HOST
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: METALLB_ML_BIND_ADDR
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-            # needed when another software is also using memberlist / port 7946
-            # when changing this default you also need to update the container ports definition
-            # and the PodSecurityPolicy hostPorts definition
-            #- name: METALLB_ML_BIND_PORT
-            #  value: "7946"
-            - name: METALLB_ML_LABELS
-              value: "app=metallb,component=speaker"
-            - name: METALLB_ML_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: memberlist
-                  key: secretkey
-          image: quay.io/metallb/speaker:v0.12.1
-          name: speaker
-          ports:
-            - containerPort: 7472
-              name: monitoring
-            - containerPort: 7946
-              name: memberlist-tcp
-            - containerPort: 7946
-              name: memberlist-udp
-              protocol: UDP
-          livenessProbe:
-            httpGet:
-              path: /metrics
-              port: monitoring
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /metrics
-              port: monitoring
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 3
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-                - NET_RAW
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-      hostNetwork: true
-      nodeSelector:
-        kubernetes.io/os: linux
-      serviceAccountName: speaker
-      terminationGracePeriodSeconds: 2
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-          operator: Exists
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: metallb
-    component: controller
-  name: controller
-  namespace: metallb-system
-spec:
-  revisionHistoryLimit: 3
-  selector:
-    matchLabels:
-      app: metallb
-      component: controller
-  template:
-    metadata:
-      annotations:
-        prometheus.io/port: "7472"
-        prometheus.io/scrape: "true"
-      labels:
-        app: metallb
-        component: controller
-    spec:
-      containers:
-        - args:
-            - --port=7472
-            - --config=config
-            - --log-level=info
-          env:
-            - name: METALLB_ML_SECRET_NAME
-              value: memberlist
-            - name: METALLB_DEPLOYMENT
-              value: controller
-          image: quay.io/metallb/controller:v0.12.1
-          name: controller
-          ports:
-            - containerPort: 7472
-              name: monitoring
-          livenessProbe:
-            httpGet:
-              path: /metrics
-              port: monitoring
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /metrics
-              port: monitoring
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 3
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - all
-            readOnlyRootFilesystem: true
-      nodeSelector:
-        kubernetes.io/os: linux
+data:
+  values.yaml: |-
+    # Default values for metallb.
+    # This is a YAML-formatted file.
+    # Declare variables to be passed into your templates.
+
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    loadBalancerClass: ""
+
+    # To configure MetalLB, you must specify ONE of the following two
+    # options.
+
+    rbac:
+      # create specifies whether to install and use RBAC rules.
+      create: true
+
+    prometheus:
+      # scrape annotations specifies whether to add Prometheus metric
+      # auto-collection annotations to pods. See
+      # https://github.com/prometheus/prometheus/blob/release-2.1/documentation/examples/prometheus-kubernetes.yml
+      # for a corresponding Prometheus configuration. Alternatively, you
+      # may want to use the Prometheus Operator
+      # (https://github.com/coreos/prometheus-operator) for more powerful
+      # monitoring configuration. If you use the Prometheus operator, this
+      # can be left at false.
+      scrapeAnnotations: false
+
+      # port both controller and speaker will listen on for metrics
+      metricsPort: 7472
+
+      # if set, enables rbac proxy on the controller and speaker to expose
+      # the metrics via tls.
+      # secureMetricsPort: 9120
+
+      # the name of the secret to be mounted in the speaker pod
+      # to expose the metrics securely. If not present, a self signed
+      # certificate to be used.
+      speakerMetricsTLSSecret: ""
+
+      # the name of the secret to be mounted in the controller pod
+      # to expose the metrics securely. If not present, a self signed
+      # certificate to be used.
+      controllerMetricsTLSSecret: ""
+
+      # prometheus doesn't have the permission to scrape all namespaces so we give it permission to scrape metallb's one
+      rbacPrometheus: true
+
+      # the service account used by prometheus
+      # required when " .Values.prometheus.rbacPrometheus == true " and " .Values.prometheus.podMonitor.enabled=true or prometheus.serviceMonitor.enabled=true "
+      serviceAccount: ""
+
+      # the namespace where prometheus is deployed
+      # required when " .Values.prometheus.rbacPrometheus == true " and " .Values.prometheus.podMonitor.enabled=true or prometheus.serviceMonitor.enabled=true "
+      namespace: ""
+
+      # the image to be used for the kuberbacproxy container
+      rbacProxy:
+        repository: gcr.io/kubebuilder/kube-rbac-proxy
+        tag: v0.12.0
+        pullPolicy:
+
+      # Prometheus Operator PodMonitors
+      podMonitor:
+        # enable support for Prometheus Operator
+        enabled: false
+
+        # optional additional labels for podMonitors
+        additionalLabels: {}
+
+        # optional annotations for podMonitors
+        annotations: {}
+
+        # Job label for scrape target
+        jobLabel: "app.kubernetes.io/name"
+
+        # Scrape interval. If not set, the Prometheus default scrape interval is used.
+        interval:
+
+        # 	metric relabel configs to apply to samples before ingestion.
+        metricRelabelings: []
+        # - action: keep
+        #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
+        #   sourceLabels: [__name__]
+
+        # 	relabel configs to apply to samples before ingestion.
+        relabelings: []
+        # - sourceLabels: [__meta_kubernetes_pod_node_name]
+        #   separator: ;
+        #   regex: ^(.*)$
+        #   target_label: nodename
+        #   replacement: $1
+        #   action: replace
+
+      # Prometheus Operator ServiceMonitors. To be used as an alternative
+      # to podMonitor, supports secure metrics.
+      serviceMonitor:
+        # enable support for Prometheus Operator
+        enabled: false
+
+        speaker:
+          # optional additional labels for the speaker serviceMonitor
+          additionalLabels: {}
+          # optional additional annotations for the speaker serviceMonitor
+          annotations: {}
+          # optional tls configuration for the speaker serviceMonitor, in case
+          # secure metrics are enabled.
+          tlsConfig:
+            insecureSkipVerify: true
+
+        controller:
+          # optional additional labels for the controller serviceMonitor
+          additionalLabels: {}
+          # optional additional annotations for the controller serviceMonitor
+          annotations: {}
+          # optional tls configuration for the controller serviceMonitor, in case
+          # secure metrics are enabled.
+          tlsConfig:
+            insecureSkipVerify: true
+
+        # Job label for scrape target
+        jobLabel: "app.kubernetes.io/name"
+
+        # Scrape interval. If not set, the Prometheus default scrape interval is used.
+        interval:
+
+        # 	metric relabel configs to apply to samples before ingestion.
+        metricRelabelings: []
+        # - action: keep
+        #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
+        #   sourceLabels: [__name__]
+
+        # 	relabel configs to apply to samples before ingestion.
+        relabelings: []
+        # - sourceLabels: [__meta_kubernetes_pod_node_name]
+        #   separator: ;
+        #   regex: ^(.*)$
+        #   target_label: nodename
+        #   replacement: $1
+        #   action: replace
+
+      # Prometheus Operator alertmanager alerts
+      prometheusRule:
+        # enable alertmanager alerts
+        enabled: false
+
+        # optional additional labels for prometheusRules
+        additionalLabels: {}
+
+        # optional annotations for prometheusRules
+        annotations: {}
+
+        # MetalLBStaleConfig
+        staleConfig:
+          enabled: true
+          labels:
+            severity: warning
+
+        # MetalLBConfigNotLoaded
+        configNotLoaded:
+          enabled: true
+          labels:
+            severity: warning
+
+        # MetalLBAddressPoolExhausted
+        addressPoolExhausted:
+          enabled: true
+          labels:
+            severity: critical
+
+        addressPoolUsage:
+          enabled: true
+          thresholds:
+            - percent: 75
+              labels:
+                severity: warning
+            - percent: 85
+              labels:
+                severity: warning
+            - percent: 95
+              labels:
+                severity: critical
+
+        # MetalLBBGPSessionDown
+        bgpSessionDown:
+          enabled: true
+          labels:
+            severity: critical
+
+        extraAlerts: []
+
+    # controller contains configuration specific to the MetalLB cluster
+    # controller.
+    controller:
+      enabled: true
+      # -- Controller log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+      logLevel: info
+      # command: /controller
+      # webhookMode: enabled
+      image:
+        repository: quay.io/metallb/controller
+        tag:
+        pullPolicy:
+      ## @param controller.updateStrategy.type Metallb controller deployment strategy type.
+      ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+      ## e.g:
+      ## strategy:
+      ##  type: RollingUpdate
+      ##  rollingUpdate:
+      ##    maxSurge: 25%
+      ##    maxUnavailable: 25%
+      ##
+      strategy:
+        type: RollingUpdate
+      serviceAccount:
+        # Specifies whether a ServiceAccount should be created
+        create: true
+        # The name of the ServiceAccount to use. If not set and create is
+        # true, a name is generated using the fullname template
+        name: ""
+        annotations: {}
       securityContext:
         runAsNonRoot: true
+        # nobody
         runAsUser: 65534
         fsGroup: 65534
-      serviceAccountName: controller
-      terminationGracePeriodSeconds: 0
+      resources: {}
+        # limits:
+          # cpu: 100m
+          # memory: 100Mi
+      nodeSelector: {}
+      tolerations: []
+      priorityClassName: ""
+      runtimeClassName: ""
+      affinity: {}
+      podAnnotations: {}
+      labels: {}
+      livenessProbe:
+        enabled: true
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      readinessProbe:
+        enabled: true
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      tlsMinVersion: "VersionTLS12"
+      tlsCipherSuites: ""
+
+      extraContainers: []
+
+    # speaker contains configuration specific to the MetalLB speaker
+    # daemonset.
+    speaker:
+      enabled: true
+      # command: /speaker
+      # -- Speaker log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none`
+      logLevel: info
+      tolerateMaster: true
+      memberlist:
+        enabled: true
+        mlBindPort: 7946
+        mlBindAddrOverride: ""
+        mlSecretKeyPath: "/etc/ml_secret_key"
+      excludeInterfaces:
+        enabled: true
+      # ignore the exclude-from-external-loadbalancer label
+      ignoreExcludeLB: false
+
+      image:
+        repository: quay.io/metallb/speaker
+        tag:
+        pullPolicy:
+      ## @param speaker.updateStrategy.type Speaker daemonset strategy type
+      ## ref: https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/
+      ##
+      updateStrategy:
+        ## StrategyType
+        ## Can be set to RollingUpdate or OnDelete
+        ##
+        type: RollingUpdate
+      serviceAccount:
+        # Specifies whether a ServiceAccount should be created
+        create: true
+        # The name of the ServiceAccount to use. If not set and create is
+        # true, a name is generated using the fullname template
+        name: ""
+        annotations: {}
+      securityContext: {}
+      ## Defines a secret name for the controller to generate a memberlist encryption secret
+      ## By default secretName: {{ "metallb.fullname" }}-memberlist
+      ##
+      # secretName:
+      resources: {}
+        # limits:
+          # cpu: 100m
+          # memory: 100Mi
+      nodeSelector: {}
+      tolerations: []
+      priorityClassName: ""
+      affinity: {}
+      ## Selects which runtime class will be used by the pod.
+      runtimeClassName: ""
+      podAnnotations: {}
+      labels: {}
+      livenessProbe:
+        enabled: true
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      readinessProbe:
+        enabled: true
+        failureThreshold: 3
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      startupProbe:
+        enabled: true
+        failureThreshold: 30
+        periodSeconds: 5
+      # frr contains configuration specific to the MetalLB FRR container,
+      # for speaker running alongside FRR.
+      frr:
+        enabled: true
+        image:
+          repository: quay.io/frrouting/frr
+          tag: 9.1.0
+          pullPolicy:
+        metricsPort: 7473
+        resources: {}
+
+        # if set, enables a rbac proxy sidecar container on the speaker to
+        # expose the frr metrics via tls.
+        # secureMetricsPort: 9121
+
+
+      reloader:
+        resources: {}
+
+      frrMetrics:
+        resources: {}
+
+      extraContainers: []
+
+    crds:
+      enabled: true
+      validationFailurePolicy: Fail
+
+    # frrk8s contains the configuration related to using an frrk8s instance
+    # (github.com/metallb/frr-k8s) as the backend for the BGP implementation.
+    # This allows configuring additional frr parameters in combination to those
+    # applied by MetalLB.
+    frrk8s:
+      # if set, enables frrk8s as a backend. This is mutually exclusive to frr
+      # mode.
+      enabled: false
+      external: false
+      namespace: ""
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: config--metallb-system
+  namespace: flux-system
+spec:
+  interval: 15m
+  dependsOn:
+    - name: metallb--metallb-system
+  path: ./metallb-config
+  prune: true # remove any elements later removed from the above path
+  timeout: 2m # if not set, this defaults to interval duration, which is 1h
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: metallb-controller
+      namespace: metallb-system
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: metallb-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.32.0/24
