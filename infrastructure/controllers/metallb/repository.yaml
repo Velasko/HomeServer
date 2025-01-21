@@ -1,7 +1,3 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: metallb-system
 ---
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
@@ -11,4 +7,3 @@ metadata:
 spec:
   interval: 15m
   url: https://metallb.github.io/metallb
-
