@@ -7,3 +7,4 @@ resources:
   - ./namespace.yaml
   - ./repository.yaml
   - ./configmap.yaml
+  - ./kustomization-config--metallb-system.yaml
