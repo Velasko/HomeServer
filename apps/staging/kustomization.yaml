@@ -5,4 +5,5 @@ metadata:
   namespace: flux-system
 resources:
   - ./podinfo
+  - ./longhorn
   # - ./jellyfin
