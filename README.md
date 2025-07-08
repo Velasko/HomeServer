@@ -10,6 +10,12 @@ Pretty much it's [getting started](https://www.talos.dev/latest/introduction/get
 
 Depending what is to be deployed (such as longhorn), [System Extensions](https://www.talos.dev/latest/talos-guides/configuration/system-extensions/) might be required. Reading the [Boot Assets](https://www.talos.dev/latest/talos-guides/install/boot-assets/) is also a good call. However, the [Image Factory](https://factory.talos.dev/) is the simplest way to get by. Some good reading on [Production Clusters](https://www.talos.dev/latest/introduction/prodnotes/#configure-talos) and [Performance Tuning](https://www.talos.dev/latest/talos-guides/configuration/performance-tuning/) might be useful when deploying for production.
 
+The modules I have enabled are:
+1. iscsi-tools
+2. util-linux-tools
+
+They are listed as requirements on [Longhorn Docs](https://longhorn.io/docs/1.9.0/advanced-resources/os-distro-specific/talos-linux-support/).
+
 -------------# Those modifications are now handled by the patch, but will be kept here as reference #-------------
 When [Modifying the Machine configs](https://www.talos.dev/latest/introduction/getting-started/#modifying-the-machine-configs), change from /dev/sda to /dev/vda on both controlplane.yaml and worker.yaml. For longhorn support, some extra operations must be done. Those can be found [here](https://longhorn.io/docs/latest/advanced-resources/os-distro-specific/talos-linux-support/). On [Pod Security](https://longhorn.io/docs/latest/advanced-resources/os-distro-specific/talos-linux-support/#pod-security), it says to change to "privileged". However, adding "longhorn-system" to the exemptions also works.
 
