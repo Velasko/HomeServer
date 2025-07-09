@@ -6,4 +6,4 @@ metadata:
   namespace: jellyfin
 spec:
   interval: 5m
-  url: https://stefanprodan.github.io/jellyfin
+  url: https://jellyfin.github.io/jellyfin-helm
