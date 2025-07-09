@@ -7,7 +7,7 @@ metadata:
   name: jellyfin
   namespace: jellyfin
 spec:
-  progressDeadlineSeconds: 300
+  progressDeadlineSeconds: 120
   replicas: 1
   strategy:
     rollingUpdate:
