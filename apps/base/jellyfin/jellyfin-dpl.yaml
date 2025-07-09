@@ -30,29 +30,45 @@ spec:
           persistentVolumeClaim:
             claimName: jellyfin-pvc-data
       containers:
-        image: ghcr.io/linuxserver/jellyfin
-        imagePullPolicy: Always
-        name: jellyfin
-        ports:
-          - containerPort: 8096
-            name: http-tcp
-            protocol: TCP
-          - containerPort: 8920
-            name: https-tcp
-            protocol: TCP
-          - containerPort: 1900
-            name: dlna-udp
-            protocol: UDP
-          - containerPort: 7359
-            name: discovery-udp
-            protocol: UDP
-        resources: {}
-        stdin: true
-        tty: true
-        volumeMounts:
-          - mountPath: /config
-            name: jellyfin-config
-          - mountPath: /data
-            name: jellyfin-data
+        - env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+          image: docker.io/jellyfin/jellyfin
+          imagePullPolicy: Always
+          name: jellyfin
+          ports:
+            - containerPort: 8096
+              name: http-tcp
+              protocol: TCP
+            - containerPort: 8920
+              name: https-tcp
+              protocol: TCP
+            - containerPort: 1900
+              name: dlna-udp
+              protocol: UDP
+            - containerPort: 7359
+              name: discovery-udp
+              protocol: UDP
+          resources: {}
+          stdin: true
+          tty: true
+          volumeMounts:
+            - mountPath: /config
+              name: jellyfin-config
+            - mountPath: /data
+              name: jellyfin-data
       dnsPolicy: ClusterFirst
       restartPolicy: Always
