@@ -9,5 +9,5 @@ resources:
   - volume.yaml
   # - repository.yaml
   # - release.yaml
-  - jellyfin-dpl.yaml
+  # - jellyfin-dpl.yaml
   # - jellyfin-svc.yaml
