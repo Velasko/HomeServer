@@ -6,4 +6,4 @@ metadata:
 resources:
   - ./podinfo
   - ./longhorn
-  # - ./jellyfin
+  - ./jellyfin
